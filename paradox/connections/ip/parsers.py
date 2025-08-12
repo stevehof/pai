@@ -16,6 +16,8 @@ from construct import (
     Pointer,
     Rebuild,
     Struct,
+    len_,
+    obj_,
     this,
 )
 
@@ -70,7 +72,7 @@ IPPayloadConnectResponse = Struct(
     "ip_type"
     / Default(
         Pointer(21, Enum(Int8ub, IP150=0x71, IP100=0x70)),
-        lambda ctx: ctx.ip_module_serial[0],
+        obj_(this.ip_module_serial[0]),
     ),
 ).compile()
 
@@ -95,10 +97,8 @@ IPMessageRequest = Struct(
         16,
         Struct(
             "sof" / Const(0xAA, Int8ub),
-            "length"
-            / Rebuild(
-                Int16ul, lambda ctx: len(ctx._.payload) if "payload" in ctx._ else 0
-            ),
+            "length" /
+                Rebuild(Int16ul, len_(this._.payload)),
             "message_type" / Default(IPMessageType, 0x03),
             "flags"
             / BitStruct(
@@ -140,10 +140,8 @@ IPMessageResponse = Struct(
         16,
         Struct(
             "sof" / Const(0xAA, Int8ub),
-            "length"
-            / Rebuild(
-                Int16ul, lambda ctx: len(ctx._.payload) if "payload" in ctx._ else 0
-            ),
+            "length"/
+                Rebuild(Int16ul, len_(this._.payload)),
             "message_type" / Default(IPMessageType, 0x01),
             "flags"
             / BitStruct(
